@@ -47,12 +47,24 @@ import time
 
 
 
+def waitmotors():
+  for i in range(60):
+    ser.write(b"getmotors\r\n")
+    time.sleep(0.4)
+    a = ser.read(500)
+    if b"LeftWheel_Speed,0" in a and b"RightWheel_Speed,0" in a:
+      return True
+    print(a)
+    time.sleep(0.1)
+  print("waitmotors: timed out after 30 sec.")
+  return False
+
 def waitready():
   time.sleep(0.4)
   a = ser.read(100)
   print(a)
   time.sleep(0.1)
-# 
+
    
 ser = serial.Serial('/dev/ttyACM0', timeout=0.2)	# read timeout 200msec
 ser.write(b"testmode on\r\n")
