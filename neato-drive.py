@@ -47,12 +47,18 @@ import time
 
 
 
+# b'getmotors\r\nParameter,Value\r\nBrush_RPM,0\r\nBrush_mA,0\r\nVacuum_RPM,4800\r\nVacuum_mA,404\r\nLeftWheel_RPM,3300\r\nLeftWheel_Load%,75\r\nLeftWheel_PositionInMM,28143\r\nLeftWheel_Speed,187\r\nRightWheel_RPM,-3600\r\nRightWheel_Load%,71\r\nRightWheel_PositionInMM,-3226\r\nRightWheel_Speed,-206\r\nROTATION_SPEED,0.00\r\nSideBrush_mA,0\r\n\x1a\r\n\x1a'
+# b'setmotor speed 200 LWheelDist 196 RWheelDist -196\r\n\x1a\r\n\x1agetmotors\r\nParameter,Value\r\nBrush_RPM,0\r\nBrush_mA,0\r\nVacuum_RPM,3000\r\nVacuum_mA,255\r\nLeftWheel_RPM,3600\r\nLeftWheel_Load%,66\r\nLeftWheel_PositionInMM,28313\r\nLeftWheel_Speed,205\r\nRightWheel_RPM,3300\r\nRightWheel_Load%,18\r\nRightWheel_PositionInMM,-3205\r\nRightWheel_Speed,187\r\nROTATION_SPEED,0.00\r\nSideBrush_mA,0\r\n\x1a\r\n\x1a'
+# b'getmotors\r\nParameter,Value\r\nBrush_RPM,0\r\nBrush_mA,0\r\nVacuum_RPM,4200\r\nVacuum_mA,466\r\nLeftWheel_RPM,3300\r\nLeftWheel_Load%,77\r\nLeftWheel_PositionInMM,28446\r\nLeftWheel_Speed,187\r\nRightWheel_RPM,-3300\r\nRightWheel_Load%,76\r\nRightWheel_PositionInMM,-3323\r\nRightWheel_Speed,-188\r\nROTATION_SPEED,0.00\r\nSideBrush_mA,0\r\n\x1a\r\n\x1a'
+# b'setmotor speed 200 LWheelDist 196 RWheelDist -196\r\n\x1a\r\n\x1agetmotors\r\nParameter,Value\r\nBrush_RPM,0\r\nBrush_mA,0\r\nVacuum_RPM,5400\r\nVacuum_mA,426\r\nLeftWheel_RPM,3300\r\nLeftWheel_Load%,77\r\nLeftWheel_PositionInMM,28621\r\nLeftWheel_Speed,187\r\nRightWheel_RPM,3600\r\nRightWheel_Load%,16\r\nRightWheel_PositionInMM,-3295\r\nRightWheel_Speed,205\r\nROTATION_SPEED,0.00\r\nSideBrush_mA,0\r\n\x1a\r\n\x1a'
+
 def waitmotors():
   for i in range(60):
     ser.write(b"getmotors\r\n")
     time.sleep(0.4)
     a = ser.read(500)
     if b"LeftWheel_Speed,0" in a and b"RightWheel_Speed,0" in a:
+      print("waitmotors: motors have stopped.")
       return True
     print(a)
     time.sleep(0.1)
@@ -74,9 +80,9 @@ for i in range(10):
   ser.write(b"setmotor vacuumspeed 40 vacuumon\r\n")
   for s in range(4):
     ser.write(b"setmotor speed 200 LWheelDist 1000 RWheelDist 1000\r\n")	# 1m fwd
-    waitready()
-    ser.write(b"setmotor speed 200 LWheelDist 196 RWheelDist -196\r\n")	# 90 deg clockwise
-    waitready()
+    waitmotors()
+    ser.write(b"setmotor speed 200 LWheelDist 196 RWheelDist -196\r\n")	        # 90 deg clockwise
+    waitmotors()
   ser.write(b"setmotor vacuumoff\r\n")
   time.sleep(2) 
 
