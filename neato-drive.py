@@ -15,6 +15,10 @@
 import time
 import atexit
 
+## this belongs all into class neato, but does not work there...
+import termios, tty, sys, time
+import serial
+
 # getmotors
 #  Parameter,Value
 #  Brush_RPM,0
@@ -55,17 +59,13 @@ import atexit
 # b'getmotors\r\nParameter,Value\r\nBrush_RPM,0\r\nBrush_mA,0\r\nVacuum_RPM,4200\r\nVacuum_mA,466\r\nLeftWheel_RPM,3300\r\nLeftWheel_Load%,77\r\nLeftWheel_PositionInMM,28446\r\nLeftWheel_Speed,187\r\nRightWheel_RPM,-3300\r\nRightWheel_Load%,76\r\nRightWheel_PositionInMM,-3323\r\nRightWheel_Speed,-188\r\nROTATION_SPEED,0.00\r\nSideBrush_mA,0\r\n\x1a\r\n\x1a'
 # b'setmotor speed 200 LWheelDist 196 RWheelDist -196\r\n\x1a\r\n\x1agetmotors\r\nParameter,Value\r\nBrush_RPM,0\r\nBrush_mA,0\r\nVacuum_RPM,5400\r\nVacuum_mA,426\r\nLeftWheel_RPM,3300\r\nLeftWheel_Load%,77\r\nLeftWheel_PositionInMM,28621\r\nLeftWheel_Speed,187\r\nRightWheel_RPM,3600\r\nRightWheel_Load%,16\r\nRightWheel_PositionInMM,-3295\r\nRightWheel_Speed,205\r\nROTATION_SPEED,0.00\r\nSideBrush_mA,0\r\n\x1a\r\n\x1a'
 
-
 global_oldattr = None
-
 
 
 class Neato():
   """
     Connect to a Neato Botvac, read the sensors control the motors.
   """
-  import termios, tty, sys, time
-  import serial
 
   __version__ = "0.2"
 
@@ -100,7 +100,8 @@ class Neato():
     self.send("testmode on")
     self.waitready()
 
-  def set_stdin_normal():
+
+  def set_stdin_normal(self=Null):
         global global_oldattr
 
         fd = sys.stdin.fileno()
@@ -110,7 +111,7 @@ class Neato():
             termios.tcsetattr(fd, termios.TCSADRAIN, global_oldattr)
 
 
-  def set_stdin_raw(timeout=0.1, fd=sys.stdin.fileno()):
+  def set_stdin_raw(self, timeout=0.1, fd=sys.stdin.fileno()):
         """ Set a character device in non-blocking one byte raw mode.
             The timeout is specified as a float [sec] here. For VTIME we convert to deciseconds.
             The filedescriptor defaults to stdin.
@@ -143,7 +144,7 @@ class Neato():
         return global_oldattr
 
 
-  def fetchkey():
+  def fetchkey(self):
       """
       If the pressed key was a modifier key, nothing will be detected; if
       it were a special function key, it may return the first character of
@@ -191,8 +192,8 @@ if __name__ == '__main__':
   vac = 40
 
   bot.send("setmotor vacuumspeed 40 vacuumon")
-  while True;
-    inp = fetchkey()
+  while True:
+    inp = bot.fetchkey()
 
     if inp in [ 'q', 'Q' ]:
       print("q")
@@ -216,20 +217,20 @@ if __name__ == '__main__':
       bot.send("setmotor speed 200 LWheelDist 10 RWheelDist 30")         # 5 deg counterclockwise
       bot.waitmotors()
 
-    elif inp in ( SHIFT_C_UP:
+    elif inp in ( SHIFT_C_UP, 'K' ):
       print("SHIFT_C_UP")
       bot.send("setmotor speed 200 LWheelDist 1000 RWheelDist 100")      # 10cm fwd
       bot.waitmotors()
-    elif inp == ( SHIFT_C_DN:
+    elif inp in ( SHIFT_C_DN, 'J' ):
       print("SHIFT_C_DN")
       bot.send("setmotor speed 200 LWheelDist 1000 RWheelDist -100")     # 10cm bwd
       bot.waitmotors()
 
-    elif inp in ( SHIFT_C_RE:
+    elif inp in ( SHIFT_C_RE, 'L' ):
       print("SHIFT_C_RE")
       bot.send("setmotor speed 200 LWheelDist 196 RWheelDist -196")      # 90 deg clockwise
       bot.waitmotors()
-    elif inp == ( SHIFT_C_LE:
+    elif inp in ( SHIFT_C_LE, 'H' ):
       print("SHIFT_C_LE")
       bot.send("setmotor speed 200 LWheelDist -196 RWheelDist 196")      # 90 def counter clockwise
       bot.waitmotors()
