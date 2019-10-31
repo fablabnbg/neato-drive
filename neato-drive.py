@@ -224,29 +224,29 @@ if __name__ == '__main__':
 
     elif inp in ( C_RE, 'd', 'l'):
       print("C_RE")
-      bot.send("setmotor speed 200 LWheelDist 30 RWheelDist 10" % (speed))         # 5 deg clockwise
+      bot.send("setmotor speed %d LWheelDist 30 RWheelDist 10" % (speed))         # 5 deg clockwise
       # bot.waitmotors()
     elif inp in ( C_LE, 'a', 'h' ):
       print("C_LE")
-      bot.send("setmotor speed 200 LWheelDist 10 RWheelDist 30" % (speed))         # 5 deg counterclockwise
+      bot.send("setmotor speed %d LWheelDist 10 RWheelDist 30" % (speed))         # 5 deg counterclockwise
       # bot.waitmotors()
 
     elif inp in ( SHIFT_C_UP, 'K' ):
       print("SHIFT_C_UP")
-      bot.send("setmotor speed 200 LWheelDist 100 RWheelDist 100" % (speed))      # 10cm fwd
+      bot.send("setmotor speed %d LWheelDist 100 RWheelDist 100" % (speed))      # 10cm fwd
       # bot.waitmotors()
     elif inp in ( SHIFT_C_DN, 'J' ):
       print("SHIFT_C_DN")
-      bot.send("setmotor speed 200 LWheelDist 100 RWheelDist -100" % (speed))     # 10cm bwd
+      bot.send("setmotor speed %d LWheelDist 100 RWheelDist -100" % (speed))     # 10cm bwd
       # bot.waitmotors()
 
     elif inp in ( SHIFT_C_RE, 'L' ):
       print("SHIFT_C_RE")
-      bot.send("setmotor speed 200 LWheelDist 196 RWheelDist -196" % (speed))      # 90 deg clockwise
+      bot.send("setmotor speed %d LWheelDist 196 RWheelDist -196" % (speed))      # 90 deg clockwise
       bot.waitmotors()
     elif inp in ( SHIFT_C_LE, 'H' ):
       print("SHIFT_C_LE")
-      bot.send("setmotor speed 200 LWheelDist -196 RWheelDist 196" % (speed))      # 90 def counter clockwise
+      bot.send("setmotor speed %d LWheelDist -196 RWheelDist 196" % (speed))      # 90 def counter clockwise
       bot.waitmotors()
 
     elif inp == 'v':
