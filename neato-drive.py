@@ -12,8 +12,8 @@
 # neato-drive.py
 # V0.1		jw initial draught
 
-import serial
 import time
+import atexit
 
 # getmotors
 #  Parameter,Value
@@ -56,12 +56,18 @@ import time
 # b'setmotor speed 200 LWheelDist 196 RWheelDist -196\r\n\x1a\r\n\x1agetmotors\r\nParameter,Value\r\nBrush_RPM,0\r\nBrush_mA,0\r\nVacuum_RPM,5400\r\nVacuum_mA,426\r\nLeftWheel_RPM,3300\r\nLeftWheel_Load%,77\r\nLeftWheel_PositionInMM,28621\r\nLeftWheel_Speed,187\r\nRightWheel_RPM,3600\r\nRightWheel_Load%,16\r\nRightWheel_PositionInMM,-3295\r\nRightWheel_Speed,205\r\nROTATION_SPEED,0.00\r\nSideBrush_mA,0\r\n\x1a\r\n\x1a'
 
 
+global_oldattr = None
+
+
+
 class Neato():
   """
     Connect to a Neato Botvac, read the sensors control the motors.
   """
+  import termios, tty, sys, time
+  import serial
 
-  __version__ = "0.1"
+  __version__ = "0.2"
 
 
   def send(self, text):
@@ -94,19 +100,150 @@ class Neato():
     self.send("testmode on")
     self.waitready()
 
+  def set_stdin_normal():
+        global global_oldattr
+
+        fd = sys.stdin.fileno()
+        if global_oldattr is not None:
+            ## hmm, why did we save global_oldattr? This should ave these bits already right. Apparently not...
+            global_oldattr[tty.LFLAG] = global_oldattr[tty.LFLAG] | termios.ECHO | termios.ICANON | termios.IEXTEN
+            termios.tcsetattr(fd, termios.TCSADRAIN, global_oldattr)
+
+
+  def set_stdin_raw(timeout=0.1, fd=sys.stdin.fileno()):
+        """ Set a character device in non-blocking one byte raw mode.
+            The timeout is specified as a float [sec] here. For VTIME we convert to deciseconds.
+            The filedescriptor defaults to stdin.
+        """
+        global global_oldattr
+
+        global_oldattr = termios.tcgetattr(fd)
+        newattr = termios.tcgetattr(fd)
+
+        ## The bits are defined in the termios module, the bytes are in the tty module.
+        # tty.IFLAG = 0
+        # tty.OFLAG = 1
+        # tty.CFLAG = 2
+        # tty.LFLAG = 3
+        # tty.ISPEED = 4
+        # tty.OSPEED = 5
+        # tty.CC = 6
+
+        # VMIN defines the number of characters read at a time in
+        # non-canonical mode. It seems to default to 1 on Linux, but on
+        # Solaris and derived operating systems it defaults to 4. (This is
+        # because the VMIN slot is the same as the VEOF slot, which
+        # defaults to ASCII EOT = Ctrl-D = 4.)
+
+        newattr[tty.LFLAG] = newattr[tty.LFLAG] & ~(termios.ECHO | termios.ICANON | termios.IEXTEN)
+        newattr[tty.CC][termios.VMIN] = 0
+        newattr[tty.CC][termios.VTIME] = int(10 * timeout + .5)
+
+        termios.tcsetattr(fd, termios.TCSANOW, newattr)
+        return global_oldattr
+
+
+  def fetchkey():
+      """
+      If the pressed key was a modifier key, nothing will be detected; if
+      it were a special function key, it may return the first character of
+      of an escape sequence, leaving additional characters in the buffer.
+      """
+      fd = sys.stdin.fileno()
+      instr = ''
+      set_stdin_raw(0.01, fd)
+      # try:
+      while True:
+            input = sys.stdin.read(32)
+            # print("input", input)
+            if len(input) < 1:
+              break
+            instr += input
+      ## not neeed here, atexit() does it all.
+      # finally:
+      #     set_stdin_normal()
+      return instr
+
+
 # --------------------------------------------------------------------------
 
 if __name__ == '__main__':
 
+  C_UP = '\x1b[A'
+  C_DN = '\x1b[B'
+  C_RE = '\x1b[C'
+  C_LE = '\x1b[D'
+
+  SHIFT_C_UP = '\x1b[1;2A'
+  SHIFT_C_DN = '\x1b[1;2B'
+  SHIFT_C_RE = '\x1b[1;2C'
+  SHIFT_C_LE = '\x1b[1;2D'
+
+  SHIFT_C_UP = '\x1b[1;5A'
+  SHIFT_C_DN = '\x1b[1;5B'
+  SHIFT_C_RE = '\x1b[1;5C'
+  SHIFT_C_LE = '\x1b[1;5D'
+
   bot = Neato()
 
-  for i in range(10):
-    bot.send("setmotor vacuumspeed 40 vacuumon")
-    for s in range(4):
-      bot.send("setmotor speed 200 LWheelDist 1000 RWheelDist 1000")      # 1m fwd
+  atexit.register(bot.set_stdin_normal)
+
+  vac = 40
+
+  bot.send("setmotor vacuumspeed 40 vacuumon")
+  while True;
+    inp = fetchkey()
+
+    if inp in [ 'q', 'Q' ]:
+      print("q")
+      break
+
+    elif inp in ( C_UP, 'w', 'k' ):
+      print("C_UP")
+      bot.send("setmotor speed 200 LWheelDist 1000 RWheelDist 10")       # 1cm fwd
       bot.waitmotors()
-      bot.send("setmotor speed 200 LWheelDist 196 RWheelDist -196")       # 90 deg clockwise
+    elif inp in ( C_DN, 's', 'j' ):
+      print("C_DN")
+      bot.send("setmotor speed 200 LWheelDist 1000 RWheelDist -10")      # 1cm bwd
       bot.waitmotors()
-    bot.send("setmotor vacuumoff")
-    time.sleep(2)
+
+    elif inp in ( C_RE, 'd', 'l'):
+      print("C_RE")
+      bot.send("setmotor speed 200 LWheelDist 30 RWheelDist 10")         # 5 deg clockwise
+      bot.waitmotors()
+    elif inp in ( C_LE, 'a', 'h' ):
+      print("C_LE")
+      bot.send("setmotor speed 200 LWheelDist 10 RWheelDist 30")         # 5 deg counterclockwise
+      bot.waitmotors()
+
+    elif inp in ( SHIFT_C_UP:
+      print("SHIFT_C_UP")
+      bot.send("setmotor speed 200 LWheelDist 1000 RWheelDist 100")      # 10cm fwd
+      bot.waitmotors()
+    elif inp == ( SHIFT_C_DN:
+      print("SHIFT_C_DN")
+      bot.send("setmotor speed 200 LWheelDist 1000 RWheelDist -100")     # 10cm bwd
+      bot.waitmotors()
+
+    elif inp in ( SHIFT_C_RE:
+      print("SHIFT_C_RE")
+      bot.send("setmotor speed 200 LWheelDist 196 RWheelDist -196")      # 90 deg clockwise
+      bot.waitmotors()
+    elif inp == ( SHIFT_C_LE:
+      print("SHIFT_C_LE")
+      bot.send("setmotor speed 200 LWheelDist -196 RWheelDist 196")      # 90 def counter clockwise
+      bot.waitmotors()
+
+    elif inp == 'v':
+      vac += 20
+      if vac > 100: vac = 0
+      print("v %d" % vac)
+      bot.send("setmotor vacuumspeed %d vacuumon" % vac)
+    elif inp == 'V':
+      vac = 0
+      print("V 0")
+      bot.send("setmotor vacuumoff")
+
+  bot.send("setmotor vacuumoff")
+  time.sleep(2)
 
