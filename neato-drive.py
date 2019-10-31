@@ -180,10 +180,10 @@ if __name__ == '__main__':
   SHIFT_C_RE = '\x1b[1;2C'
   SHIFT_C_LE = '\x1b[1;2D'
 
-  SHIFT_C_UP = '\x1b[1;5A'
-  SHIFT_C_DN = '\x1b[1;5B'
-  SHIFT_C_RE = '\x1b[1;5C'
-  SHIFT_C_LE = '\x1b[1;5D'
+  CTRL_C_UP = '\x1b[1;5A'
+  CTRL_C_DN = '\x1b[1;5B'
+  CTRL_C_RE = '\x1b[1;5C'
+  CTRL_C_LE = '\x1b[1;5D'
 
   bot = Neato()
 
@@ -191,6 +191,20 @@ if __name__ == '__main__':
 
   vac = 40
   speed = 100
+
+  print("""
+Usage:
+
+	asdw or hjkl or cursor keys to navigate ...
+		use with SHIFT for 90 deg turns or faster jumps
+
+	+ -	change the drive speed ...
+
+	v V	to set the vavuum speed ...
+
+	q	quit
+
+""")
 
   bot.send("setmotor vacuumspeed 40 vacuumon")
   while True:
@@ -204,13 +218,13 @@ if __name__ == '__main__':
     elif inp in [ '+' ]:
       speed += 20
       if speed > 200: speed = 200
-      print("+ (speed=%d)", speed)
+      print("+ (speed=%d)" % speed)
       break
 
     elif inp in [ '-' ]:
       speed -= 20
       if speed < 10: speed = 10
-      print("- (speed=%d)", speed)
+      print("- (speed=%d)" % speed)
       break
 
     elif inp in ( C_UP, 'w', 'k' ):
@@ -237,7 +251,7 @@ if __name__ == '__main__':
       # bot.waitmotors()
     elif inp in ( SHIFT_C_DN, 'J' ):
       print("SHIFT_C_DN")
-      bot.send("setmotor speed %d LWheelDist 100 RWheelDist -100" % (speed))     # 10cm bwd
+      bot.send("setmotor speed %d LWheelDist -100 RWheelDist -100" % (speed))     # 10cm bwd
       # bot.waitmotors()
 
     elif inp in ( SHIFT_C_RE, 'L' ):
